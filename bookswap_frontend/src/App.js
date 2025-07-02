@@ -1,48 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import './App.css';
+import { AuthProvider, useAuth } from './core/AuthContext';
+import Navbar from './core/Navbar';
+
+// Pages
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import MarketplacePage from './pages/MarketplacePage';
+import BookDetailPage from './pages/BookDetailPage';
+import SwapRequestsPage from './pages/SwapRequestsPage';
+import PurchasesPage from './pages/PurchasesPage';
+import DashboardPage from './pages/DashboardPage';
+import ListBookPage from './pages/ListBookPage';
+import NotFoundPage from './pages/NotFoundPage';
+
+// PUBLIC_INTERFACE
+function ProtectedRoute() {
+  const { user } = useAuth();
+  // Simple route guard for authenticated user
+  return user ? <Outlet /> : <Navigate to="/login" replace />;
+}
 
 // PUBLIC_INTERFACE
 function App() {
   const [theme, setTheme] = useState('light');
 
-  // Effect to apply theme to document element
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Navbar onToggleTheme={toggleTheme} currentTheme={theme} />
+          <div className="container" style={{ marginTop: 40, minHeight: 500 }}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<MarketplacePage />} />
+                <Route path="/marketplace" element={<MarketplacePage />} />
+                <Route path="/book/:id" element={<BookDetailPage />} />
+                <Route path="/swap-requests" element={<SwapRequestsPage />} />
+                <Route path="/purchases" element={<PurchasesPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/list-book" element={<ListBookPage />} />
+              </Route>
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </div>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
